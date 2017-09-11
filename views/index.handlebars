@@ -1,0 +1,156 @@
+<div class="container">
+
+  <div class="row">
+    <div class="input-group">
+      <input id="queryTextBox" type="text" list="json-datalist" autocomplete="off" class="form-control" placeholder="E.g. orchard" aria-label="Search for...">
+      <datalist id="json-datalist"></datalist>
+      <span class="input-group-btn">
+        <button class="btn btn-secondary" type="button">Go!</button>
+      </span>
+    </div>
+  </div>
+
+  <div id="suggestionList" class="list-group">
+    <!-- To be populated by Handlesbars/ownselfScript :( -->
+  </div>
+
+</div>
+<br>
+<div class="container">
+  <div class="row">
+
+    <div id="map_panel" class="col-md-8 col-sm-8">
+    </div>
+
+    <div id="info_panel" class="col-md-4 col-sm-4">
+
+      <!-- Nav tabs -->
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" data-toggle="tab" href="#detail_info_panel" role="tab" aria-controls="home">Location Info</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-toggle="tab" href="#directions_panel" role="tab" aria-controls="profile">Directions</a>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane active" id="detail_info_panel" role="tabpanel">
+          <!-- To be populated by Handlesbars :)-->
+          Name: Orchard ION </br>
+          </br>
+          Description: StarBucks</br>
+          </br>
+          Address: 2 Orchard Turn, 238801</br>
+          </br>
+          Crowd Level: RED</br>
+          </br>
+        </div>
+        <div class="tab-pane" id="directions_panel" role="tabpanel">
+            <!-- To be populated by GMAPS API-->
+        </div>
+
+      </div>
+
+      <script>
+      /*
+        $(function() {
+          $('#myTab a:first').tab('show')//Show 1st tab as default
+        })
+        */
+      </script>
+
+    </div>
+
+    <script>
+    </script>
+
+  </div>
+
+</div>
+</div>
+
+<script>
+  var socket = io();
+  var suggestionList;
+  var dataList = document.getElementById('json-datalist');
+  var input = document.getElementById('queryTextBox');
+  var listGrp = document.getElementById('suggestionList');
+  var option;
+  //setup before functions
+  var typingTimer; //timer identifier
+  var doneTypingInterval = 600; //time in ms
+
+  //on keyup, start the countdown
+  $('#queryTextBox').keyup(function() {
+    clearTimeout(typingTimer);
+    if ($('#queryTextBox').val()) {
+      typingTimer = setTimeout(doneTyping, doneTypingInterval);
+    } else clearChildren("suggestionList");
+  });
+
+  //user is "finished typing," do something
+  function doneTyping() {
+    socket.emit('search', $('#queryTextBox').val());
+  }
+
+  socket.on('test', function(results) { //event 2
+    //suggestionList = results;
+    //clearChildren("json-datalist");
+    clearChildren("suggestionList");
+    for (count = 0; count < results.length; count++) {
+
+      //console.log (results[count].name);
+      //option = document.createElement('option'); // Create a new <option> element.
+      //option.value = results[count].name + " | " + results[count].description;
+      //dataList.appendChild(option); // Add the <option> element to the <datalist>.
+      //listGrp.appendChild(option); // Add the <option> element to the <datalist>.
+      var list = document.createElement('a'); // Create a new <option> element.
+      list.setAttribute('href', "#");
+      list.setAttribute('class', "list-group-item list-group-item-action");
+      var txt = document.createTextNode(results[count].name + " | " + results[count].description);
+      list.appendChild(txt);
+
+      //var createAText = document.createTextNode(results[count].name + " | " + results[count].description);
+      //list.appendChild(createAText);
+      listGrp.appendChild(list);
+    }
+
+
+  });
+
+  clearChildren = function(parent_id) {
+    var parent = document.getElementById(parent_id);
+    var childArray = parent.children;
+    var cL = childArray.length;
+    while (cL > 0) {
+      cL--;
+      parent.removeChild(childArray[cL]);
+    }
+  };
+</script>
+
+<script>
+  var directionsService = new google.maps.DirectionsService();
+  var directionsDisplay = new google.maps.DirectionsRenderer();
+
+  var map = new google.maps.Map(document.getElementById('map_panel'), {
+    zoom: 7,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  });
+
+  directionsDisplay.setMap(map);
+  directionsDisplay.setPanel(document.getElementById('directions_panel'));
+
+  var request = {
+    origin: 'Toa Payoh',
+    destination: 'NTU',
+    travelMode: google.maps.DirectionsTravelMode.TRANSIT
+  };
+
+  directionsService.route(request, function(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+      directionsDisplay.setDirections(response);
+    }
+  });
+</script>
