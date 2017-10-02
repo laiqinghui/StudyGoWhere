@@ -47,7 +47,7 @@ exports.socketFunction = function(server) {
           throw err;
         else{
           console.log(results);
-          io.emit('test', results);
+          io.emit('searchResults', results);
         }
       });
     });

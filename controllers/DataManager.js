@@ -79,7 +79,7 @@ var hotspotSchema = mongoose.Schema({
 	}
 });
 
-hotspotSchema.index({ name: 'text', description: 'text'});
+hotspotSchema.index({ name: 'text', description: 'text', address: 'text'});
 var mongooseHotspotModel = mongoose.model('hotspot', hotspotSchema, 'hotspot');
 
 module.exports.getHotspotByName = function(regexQuery, callback){
@@ -87,7 +87,7 @@ module.exports.getHotspotByName = function(regexQuery, callback){
 	//regexQuery = "\"jurong\" \"rc\""
 	//console.log("Query: " + regexQuery);
 	var query = {$text: {$search: regexQuery}};
-	mongooseHotspotModel.find(query, callback);
+	mongooseHotspotModel.find(query, callback).limit(10);
 }
 //https://docs.mongodb.com/manual/reference/operator/query/text/#phrases
 //db.hotspot.find( { $text: { $search: "\"jurong\" \"rc\"" } } ).pretty()

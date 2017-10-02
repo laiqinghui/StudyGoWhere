@@ -10,16 +10,20 @@
     </div>
   </div>
 
-  <div id="suggestionList" class="list-group">
-    <!-- To be populated by Handlesbars/ownselfScript :( -->
-  </div>
+  <div id="suggestionListContainer" class="list-group" style="z-index: 1; position: absolute;"></div>
+
+  <script id="suggestionListTemplate"  type ="text/x-handlebars-template">
+    \{{#each suggestions}}
+    <a href="#" onclick="createInfoPanel(\{{json this}});return;" class="list-group-item list-group-item-action">\{{name}}  ||  \{{description}}</>
+      \{{/each}}
+  </script>
 
 </div>
 <br>
 <div class="container">
   <div class="row">
 
-    <div id="map_panel" class="col-md-8 col-sm-8">
+    <div id="map_panel" class="col-md-8 col-sm-8" style = "height: 300px;">
     </div>
 
     <div id="info_panel" class="col-md-4 col-sm-4">
@@ -37,38 +41,31 @@
       <div class="tab-content">
         <div class="tab-pane active" id="detail_info_panel" role="tabpanel">
           <!-- To be populated by Handlesbars :)-->
-          Name: Orchard ION </br>
-          </br>
-          Description: StarBucks</br>
-          </br>
-          Address: 2 Orchard Turn, 238801</br>
-          </br>
-          Crowd Level: RED</br>
-          </br>
+        </br><h4>No location selected.</h4>
+
         </div>
         <div class="tab-pane" id="directions_panel" role="tabpanel">
             <!-- To be populated by GMAPS API-->
         </div>
-
       </div>
-
-      <script>
-      /*
-        $(function() {
-          $('#myTab a:first').tab('show')//Show 1st tab as default
-        })
-        */
-      </script>
-
     </div>
-
-    <script>
-    </script>
-
   </div>
 
 </div>
 </div>
+
+<script id="detailInfoPanelTemplate"  type ="text/x-handlebars-template">
+
+  Name: \{{name}} </br>
+  </br>
+  Description: \{{description}}</br>
+  </br>
+  Address: \{{address}}</br>
+  </br>
+  Crowd Level: RED</br>
+  </br>
+
+</script>
 
 <script>
   var socket = io();
@@ -86,7 +83,7 @@
     clearTimeout(typingTimer);
     if ($('#queryTextBox').val()) {
       typingTimer = setTimeout(doneTyping, doneTypingInterval);
-    } else clearChildren("suggestionList");
+    } else clearChildren("suggestionListContainer");
   });
 
   //user is "finished typing," do something
@@ -94,17 +91,14 @@
     socket.emit('search', $('#queryTextBox').val());
   }
 
-  socket.on('test', function(results) { //event 2
-    //suggestionList = results;
-    //clearChildren("json-datalist");
-    clearChildren("suggestionList");
+  socket.on('searchResults', function(results) { //event 2
+
+    createSuggestionList(results);
+
+    /*Alternative codes if not using handlebars:
+
     for (count = 0; count < results.length; count++) {
 
-      //console.log (results[count].name);
-      //option = document.createElement('option'); // Create a new <option> element.
-      //option.value = results[count].name + " | " + results[count].description;
-      //dataList.appendChild(option); // Add the <option> element to the <datalist>.
-      //listGrp.appendChild(option); // Add the <option> element to the <datalist>.
       var list = document.createElement('a'); // Create a new <option> element.
       list.setAttribute('href', "#");
       list.setAttribute('class', "list-group-item list-group-item-action");
@@ -115,19 +109,45 @@
       //list.appendChild(createAText);
       listGrp.appendChild(list);
     }
-
+    */
 
   });
 
+  createSuggestionList = function(suggestions){
+
+    var rawTemplate = document.getElementById('suggestionListTemplate').innerHTML;
+    var compiledTemplate = Handlebars.compile(rawTemplate);
+    var generatedHTML = compiledTemplate({
+        suggestions: suggestions
+    });
+    var container = document.getElementById('suggestionListContainer');
+    container.innerHTML = generatedHTML;
+
+  }
+
+  createInfoPanel = function(location){
+
+    clearChildren("suggestionListContainer")
+    var rawTemplate = document.getElementById('detailInfoPanelTemplate').innerHTML;
+    var compiledTemplate = Handlebars.compile(rawTemplate);
+    var generatedHTML = compiledTemplate(location);
+    var container = document.getElementById('detail_info_panel');
+    container.innerHTML = generatedHTML;
+
+  }
+
   clearChildren = function(parent_id) {
     var parent = document.getElementById(parent_id);
-    var childArray = parent.children;
-    var cL = childArray.length;
-    while (cL > 0) {
-      cL--;
-      parent.removeChild(childArray[cL]);
+    while (parent.firstChild) {
+      parent.removeChild(parent.firstChild);
     }
+
   };
+
+
+  Handlebars.registerHelper('json', function(context) {
+    return JSON.stringify(context);
+});
 </script>
 
 <script>
