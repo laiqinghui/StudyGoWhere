@@ -6,7 +6,8 @@ var io = require('socket.io');
 
 // Get Homepage
 router.get('/', ensureAuthenticated, function(req, res) {
-  res.render('index');
+  res.render('index', { username: req.user.username });
+  console.log(req.user.username);
 });
 
 function ensureAuthenticated(req, res, next) { //Middleware

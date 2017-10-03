@@ -74,13 +74,13 @@ var hotspotSchema = mongoose.Schema({
 	lat: {
 		type: String
 	},
-	flagcount: {
-		type: Number
+	flagList: {
+		type: Array
 	}
 });
 
 hotspotSchema.index({ name: 'text', description: 'text', address: 'text'});
-var mongooseHotspotModel = mongoose.model('hotspot', hotspotSchema, 'hotspot');
+var mongooseHotspotModel = mongoose.model('hotspots', hotspotSchema, 'hotspots');
 
 module.exports.getHotspotByName = function(regexQuery, callback){
 

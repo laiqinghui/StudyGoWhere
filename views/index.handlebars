@@ -23,7 +23,7 @@
 <div class="container">
   <div class="row">
 
-    <div id="map_panel" class="col-md-8 col-sm-8" style = "height: 300px;">
+    <div id="map_panel" class="col-md-8 col-sm-8" style = "height: 370px;">
     </div>
 
     <div id="info_panel" class="col-md-4 col-sm-4">
@@ -40,15 +40,59 @@
 
       <div class="tab-content">
         <div class="tab-pane active" id="detail_info_panel" role="tabpanel">
-          <!-- To be populated by Handlesbars :)-->
-        </br><h4>No location selected.</h4>
+          <div id ="detailInfoPanelContainer">
+            <!-- To be populated by Handlesbars-->
+            </br><h4>No location selected.</h4>
+          </div>
+          <div class="container">
+            <div class="row">
+              <div id ="getDirectionContainer" style = "display: none;">
+                <button type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-title="Where are you heading from?" data-placement="bottom" data-html="true">Get directions!</button>
+                <div id="popover-content" style = "display: none;">
+                  <div class="input-group">
+                    <input type="text" class="form-control" placeholder="e.g. NTU" aria-label="Search for...">
+                    <span class="input-group-btn">
+                      <button class="btn btn-primary" type="button">Go!</button>
+                    </span>
+                  </div>
+                </div>
+              </div><!-- end of getDirectionContainer--->
 
-        </div>
+              <div id = "flagHotspotContainer" style = "display: none;">
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-danger" style = "margin-left: 20px;" data-toggle="modal" data-target="#comfirmFlagModal">
+                  Flag
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="comfirmFlagModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Feedback</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        Are you sure you want to flag this hotspot?
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Comfirm</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div><!-- end of flagHotspotContainer--->
+            </div>
+          </div>
+        </div><!-- end of detail_info_panel--->
         <div class="tab-pane" id="directions_panel" role="tabpanel">
             <!-- To be populated by GMAPS API-->
         </div>
-      </div>
-    </div>
+      </div><!-- end of tab content --->
+    </div><!-- end of info_panel --->
   </div>
 
 </div>
@@ -65,6 +109,23 @@
   Crowd Level: RED</br>
   </br>
 
+</script>
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+   $('[data-toggle="tooltip"]').tooltip();
+
+
+
+})
+
+$("[data-toggle=popover]").popover({
+    html: true,
+	content: function() {
+          return $('#popover-content').html();
+        }
+});
 </script>
 
 <script>
@@ -127,11 +188,14 @@
 
   createInfoPanel = function(location){
 
-    clearChildren("suggestionListContainer")
+    testUser();
+    clearChildren("suggestionListContainer");
+    $( "#getDirectionContainer" ).show( "slow" );
+    $( "#flagHotspotContainer" ).show( "slow" );
     var rawTemplate = document.getElementById('detailInfoPanelTemplate').innerHTML;
     var compiledTemplate = Handlebars.compile(rawTemplate);
     var generatedHTML = compiledTemplate(location);
-    var container = document.getElementById('detail_info_panel');
+    var container = document.getElementById('detailInfoPanelContainer');
     container.innerHTML = generatedHTML;
 
   }
@@ -143,6 +207,13 @@
     }
 
   };
+
+  testUser = function(){
+    //can try access object by converting string to json
+    var username = "{{username}}";//No need \ in front of curly braces as it's rendering from server side
+    console.log(username);
+
+  }
 
 
   Handlebars.registerHelper('json', function(context) {
