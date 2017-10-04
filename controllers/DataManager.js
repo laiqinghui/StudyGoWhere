@@ -89,6 +89,10 @@ module.exports.getHotspotByName = function(regexQuery, callback){
 	var query = {$text: {$search: regexQuery}};
 	mongooseHotspotModel.find(query, callback).limit(10);
 }
+
+module.exports.getHotspotById = function(id, callback){
+	mongooseHotspotModel.findById(id, callback);
+}
 //https://docs.mongodb.com/manual/reference/operator/query/text/#phrases
 //db.hotspot.find( { $text: { $search: "\"jurong\" \"rc\"" } } ).pretty()
 //---------End of MongoDB implementation for User entity---------

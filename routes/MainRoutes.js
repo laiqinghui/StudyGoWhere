@@ -54,3 +54,36 @@ exports.socketFunction = function(server) {
     });
   });
 }
+
+//Hotspot feedback
+router.post('/feedback',ensureAuthenticated, function(req, res){
+
+   console.log(req.user.username + " submited a feedback");
+
+   var id = req.body.hotspotid;
+   console.log(id);
+
+   DataManager.getHotspotById(id, function (err, doc) {
+
+     if(doc.flagList === null){//empty flaglist
+       doc.flagList = [req.user.username];//Need to declare flaglist as array as it is initial declared as null in db
+       doc.save();
+       req.flash('success_msg', 'Feedback submitted! Please proceed to select other location!');
+       res.redirect('/');
+     }else{//not empty
+       if(doc.flagList.indexOf(req.user.username) == -1){//check if current user already flag the hotspot before
+         doc.flagList.push(req.user.username);
+         doc.save();
+         req.flash('success_msg', 'Feedback submitted! Please proceed to select other location!');
+         res.redirect('/');
+       }else{
+         req.flash('error_msg', 'You have already flag this location before! You are only allowed to flag a location once.');
+         res.redirect('/');
+       }
+     }
+
+   })
+
+
+
+});

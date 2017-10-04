@@ -31,10 +31,10 @@
       <!-- Nav tabs -->
       <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
-          <a class="nav-link active" data-toggle="tab" href="#detail_info_panel" role="tab" aria-controls="home">Location Info</a>
+          <a class="nav-link active" data-toggle="tab" href="#detail_info_panel" role="tab" aria-controls="home">Details</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" data-toggle="tab" href="#directions_panel" role="tab" aria-controls="profile">Directions</a>
+          <a id ="directionsNavLink" class="nav-link disabled" data-toggle="tab" href="#directions_panel" role="tab" aria-controls="profile">Directions</a>
         </li>
       </ul>
 
@@ -47,12 +47,17 @@
           <div class="container">
             <div class="row">
               <div id ="getDirectionContainer" style = "display: none;">
-                <button type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-title="Where are you heading from?" data-placement="bottom" data-html="true">Get directions!</button>
+                <button id="getDirectionButton" type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-title="Where are you heading from?" data-placement="bottom" data-html="true">Get directions!</button>
                 <div id="popover-content" style = "display: none;">
                   <div class="input-group">
-                    <input type="text" class="form-control" placeholder="e.g. NTU" aria-label="Search for...">
+                    <input id ="startPointInput" style = "width: 40%;" type="text" class="form-control" placeholder="e.g. NTU" aria-label="Search for...">
+                      <select id ="transitOptions" class="form-control">
+                        <option>Drive</option>
+                        <option>Transit</option>
+                        <option>Walk</option>
+                      </select>
                     <span class="input-group-btn">
-                      <button class="btn btn-primary" type="button">Go!</button>
+                      <button class="btn btn-primary" type="button" onclick="handleGetDirectionForm()">Go!</button>
                     </span>
                   </div>
                 </div>
@@ -79,11 +84,15 @@
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Comfirm</button>
+                        <form action="" method="post" onSubmit="handleFeedbackForm(this);">
+                          <input type="hidden" name="hotspotid" value=""/>
+                          <button type="submit" class="btn btn-primary">Comfirm</button>
+                        </form>
                       </div>
                     </div>
                   </div>
                 </div>
+
               </div><!-- end of flagHotspotContainer--->
             </div>
           </div>
@@ -134,7 +143,7 @@ $("[data-toggle=popover]").popover({
   var dataList = document.getElementById('json-datalist');
   var input = document.getElementById('queryTextBox');
   var listGrp = document.getElementById('suggestionList');
-  var option;
+  var currentLocation;
   //setup before functions
   var typingTimer; //timer identifier
   var doneTypingInterval = 600; //time in ms
@@ -188,6 +197,7 @@ $("[data-toggle=popover]").popover({
 
   createInfoPanel = function(location){
 
+    currentLocation = location;//Update global var
     testUser();
     clearChildren("suggestionListContainer");
     $( "#getDirectionContainer" ).show( "slow" );
@@ -212,7 +222,47 @@ $("[data-toggle=popover]").popover({
     //can try access object by converting string to json
     var username = "{{username}}";//No need \ in front of curly braces as it's rendering from server side
     console.log(username);
+  }
 
+  handleFeedbackForm = function(form){
+    console.log(currentLocation.name);
+    console.log(currentLocation._id);
+    form.hotspotid.value = currentLocation._id;
+    form.action = "/feedback";
+  }
+
+  handleGetDirectionForm = function(){
+    $('#directionsNavLink').removeClass('nav-link disabled');
+    $('#directionsNavLink').addClass('nav-link');
+    $('#getDirectionButton').popover('hide')
+    $('#myTab a:last').tab('show') // Select last tab
+    var startLoc = $('.popover-content').find('#startPointInput').val();//Text box is now generated as a new instance in popover content
+    var transitOption = $('.popover-content').find('#transitOptions').val();
+    console.log(transitOption);
+    var endLoc = currentLocation.address;
+    var mode;
+    switch (transitOption) {
+    case "Transit":
+    mode = google.maps.DirectionsTravelMode.TRANSIT;
+    break;
+    case "Drive":
+    mode = google.maps.DirectionsTravelMode.DRIVING;
+    break;
+    case "Walk":
+    mode = google.maps.DirectionsTravelMode.WALKING;
+    break;
+    }
+    var request = {
+      origin: startLoc,
+      destination: endLoc,
+      travelMode: mode
+    };
+
+    directionsService.route(request, function(response, status) {
+      if (status == google.maps.DirectionsStatus.OK) {
+        directionsDisplay.setDirections(response);
+      }
+    });
   }
 
 
@@ -233,15 +283,5 @@ $("[data-toggle=popover]").popover({
   directionsDisplay.setMap(map);
   directionsDisplay.setPanel(document.getElementById('directions_panel'));
 
-  var request = {
-    origin: 'Toa Payoh',
-    destination: 'NTU',
-    travelMode: google.maps.DirectionsTravelMode.TRANSIT
-  };
 
-  directionsService.route(request, function(response, status) {
-    if (status == google.maps.DirectionsStatus.OK) {
-      directionsDisplay.setDirections(response);
-    }
-  });
 </script>
