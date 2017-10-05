@@ -3,6 +3,7 @@ var router = express.Router();
 var DataManager = require('../controllers/DataManager');
 var exports = module.exports = {};
 var io = require('socket.io');
+var request = require('request');
 
 // Get Homepage
 router.get('/', ensureAuthenticated, function(req, res) {
@@ -52,7 +53,37 @@ exports.socketFunction = function(server) {
         }
       });
     });
+
+    socket.on('reqCarparkInfo', function(query) { //event 2
+      getCarParkInfo(query);
+
+    });
+
+
   });
+}
+
+getCarParkInfo = function(){
+
+  var options = { url: 'http://datamall2.mytransport.sg/ltaodataservice/CarParkAvailability',
+  headers: {
+      'AccountKey': 'kkcDGM/9R/aHrR1zQythEQ=='
+    }
+  };
+
+  request(options, function(err, res, json) {
+  if (err) {
+    throw err;
+  }
+  console.log(json);
+  });
+
+}
+
+filterRelatedCarpark = function(data){
+
+
+
 }
 
 //Hotspot feedback

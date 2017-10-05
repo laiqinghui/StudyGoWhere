@@ -2,15 +2,15 @@
 
   <div class="row">
     <div class="input-group">
-      <input id="queryTextBox" type="text" list="json-datalist" autocomplete="off" class="form-control" placeholder="E.g. orchard" aria-label="Search for...">
-      <datalist id="json-datalist"></datalist>
-      <span class="input-group-btn">
+      <input id="queryTextBox" style = "width: 90%;" type="text" autocomplete="off" class="form-control" placeholder="E.g. orchard" aria-label="Search for...">
+      <span class="input-group-btn" style = "width: 10%;">
         <button class="btn btn-secondary" type="button">Go!</button>
       </span>
     </div>
+    <div id="suggestionListContainer" class="list-group" style="z-index: 1; position: absolute; padding-top:38px; width: 90%;"></div>
   </div>
 
-  <div id="suggestionListContainer" class="list-group" style="z-index: 1; position: absolute;"></div>
+
 
   <script id="suggestionListTemplate"  type ="text/x-handlebars-template">
     \{{#each suggestions}}
@@ -23,13 +23,13 @@
 <div class="container">
   <div class="row">
 
-    <div id="map_panel" class="col-md-8 col-sm-8" style = "height: 370px;">
+    <div id="map_panel" class="col-md-8 col-sm-8" style = "height: 400px;">
     </div>
 
-    <div id="info_panel" class="col-md-4 col-sm-4">
+    <div id="info_panel" style = "height: 400px;" class="col-md-4 col-sm-4">
 
       <!-- Nav tabs -->
-      <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <ul class="nav nav-pills nav-fill" style = "height: 10%;" id="myTab" role="tablist">
         <li class="nav-item">
           <a class="nav-link active" data-toggle="tab" href="#detail_info_panel" role="tab" aria-controls="home">Details</a>
         </li>
@@ -38,7 +38,7 @@
         </li>
       </ul>
 
-      <div class="tab-content">
+      <div class="tab-content" style = "height: 90%;">
         <div class="tab-pane active" id="detail_info_panel" role="tabpanel">
           <div id ="detailInfoPanelContainer">
             <!-- To be populated by Handlesbars-->
@@ -97,7 +97,7 @@
             </div>
           </div>
         </div><!-- end of detail_info_panel--->
-        <div class="tab-pane" id="directions_panel" role="tabpanel">
+        <div class="tab-pane" id="directions_panel" style = "height:100%; overflow-y:auto;" role="tabpanel">
             <!-- To be populated by GMAPS API-->
         </div>
       </div><!-- end of tab content --->
@@ -108,7 +108,7 @@
 </div>
 
 <script id="detailInfoPanelTemplate"  type ="text/x-handlebars-template">
-
+  </br>
   Name: \{{name}} </br>
   </br>
   Description: \{{description}}</br>
@@ -238,7 +238,6 @@ $("[data-toggle=popover]").popover({
     $('#myTab a:last').tab('show') // Select last tab
     var startLoc = $('.popover-content').find('#startPointInput').val();//Text box is now generated as a new instance in popover content
     var transitOption = $('.popover-content').find('#transitOptions').val();
-    console.log(transitOption);
     var endLoc = currentLocation.address;
     var mode;
     switch (transitOption) {
@@ -247,6 +246,7 @@ $("[data-toggle=popover]").popover({
     break;
     case "Drive":
     mode = google.maps.DirectionsTravelMode.DRIVING;
+    getCarParkInfo();
     break;
     case "Walk":
     mode = google.maps.DirectionsTravelMode.WALKING;
@@ -263,7 +263,18 @@ $("[data-toggle=popover]").popover({
         directionsDisplay.setDirections(response);
       }
     });
+
   }
+
+  getCarParkInfo = function(){
+
+    socket.emit('reqCarparkInfo', $('#queryTextBox').val());
+
+  }
+
+  socket.on('carparkInfo', function(results) { //event 2
+    console.log(results);
+  });
 
 
   Handlebars.registerHelper('json', function(context) {
