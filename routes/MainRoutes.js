@@ -54,16 +54,20 @@ exports.socketFunction = function(server) {
       });
     });
 
-    socket.on('reqCarparkInfo', function(query) { //event 2
-      getCarParkInfo(query);
+    socket.on('reqCarparkInfo', function(location) { //event 2
+      getCarParkInfo(location);
 
     });
 
+    socket.on('checkCrowdLvl', function(location) { //event 3
+      getCrowdLvl(location);
+
+    });
 
   });
 }
 
-getCarParkInfo = function(){
+getCarParkInfo = function(location){
 
   var options = { url: 'http://datamall2.mytransport.sg/ltaodataservice/CarParkAvailability',
   headers: {
@@ -75,14 +79,52 @@ getCarParkInfo = function(){
   if (err) {
     throw err;
   }
-  console.log(json);
+  var nearbyCarparks = getNearbyCarparks(JSON.parse(json), location);
+  io.emit('nearbyCarparks', nearbyCarparks);
   });
 
 }
 
-filterRelatedCarpark = function(data){
+getNearbyCarparks = function(data, location){
+  var carparks = {carparks: []};
+  for(i = 0; i < data.value.length; i++){
+    if(getDistance(data.value[i].Latitude, data.value[i].Longitude, location.lat, location.lon) < 1)
+      carparks.carparks.push(data.value[i]);
+  }
+  return carparks;
 
+}
 
+function getDistance(lat1,lon1,lat2,lon2) {
+  var R = 6371; // Radius of the earth in km
+  var dLat = deg2rad(lat2-lat1);  // deg2rad below
+  var dLon = deg2rad(lon2-lon1);
+  var a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+    ;
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  var d = R * c; // Distance in km
+  return d;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI/180)
+}
+
+function getCrowdLvl(location){
+  var localPythonServerUrl = 'http://localhost:5000/populartimes?lat=' + location.lat + '&lon=' + location.lon;
+  var options = { url: localPythonServerUrl};
+
+  request(options, function(err, res, json) {
+  if (err) {
+    throw err;
+  }
+
+  console.log(JSON.parse(json));
+  io.emit('crowdLvl', JSON.parse(json));
+  });
 
 }
 
