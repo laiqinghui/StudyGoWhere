@@ -1,0 +1,99 @@
+<!-- Google Maps API Key: AIzaSyCI4NyyRTSVLMOmhRXghK9RFPudN1IFP00 -->
+
+<!--
+THINGS TO DO:
+-
+
+THINGS DONE:
+- Button, when clicked will display markers of locations with related names
+- Should be able to clear all markers
+- Pass variable by JSON to this page (Then if needed, convert to an array)
+-->
+
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Script library and resource: jQuery, Popper.js, Bootstrap and Google Maps -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCI4NyyRTSVLMOmhRXghK9RFPudN1IFP00&callback=initMap"></script>
+        <script src="displayLocations.js"></script>
+    
+        <style>
+            #map{
+                height: 500px;
+                width: 100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="menu">
+            Input the location:<input type="text" value="NTU Hall" disabled>
+            <button type="button" id="btn" onclick="javascript:alert('Location changed');">Search
+                <script>
+                    document.getElementById("btn").onclick = function(){doThis()};
+                    function doThis(){
+                        selectedLoc(results);
+                    }
+                </script>
+            </button>
+        </div>
+
+        <div id="map"></div>
+        <script>
+            var map;
+            var markersArr = [];
+
+            function initMap() {
+                var myLatLng = {lat:1.3483, lng:103.6831};
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: myLatLng,
+                    zoom: 16,
+                    clickableIcons: false
+                });
+                //selectedLoc(results);
+            }
+
+            //window.selLoc = function(results) {
+            function selectedLoc(results){    
+                for (var i = 0; i < results.features.length; i++) {
+                    var coords = results.features[i].coordinates;
+                    var title = results.features[i].place;
+                    var status = results.features[i].status;
+                    var id = results.features[i].status;
+                    var latLng = new google.maps.LatLng(coords[0],coords[1]);
+
+                    if(status != "Not Available"){
+                        var currentIndex = markersArr.length;
+                        markersArr[currentIndex] = new google.maps.Marker({
+                            position: latLng,
+                            map: map,
+                            title: title,
+                        });
+
+                        markersArr[currentIndex].addListener('click', function(){
+                            ShowOnlyThis(this.getTitle());
+                            map.setZoom(17);
+                            map.setCenter(this.getPosition());
+                            console.log(this.getTitle());
+                        });
+
+                        console.log(currentIndex);
+                    }        
+                }
+            };
+
+            function ShowOnlyThis(excludeIndex){
+                for(var i = 0; i < markersArr.length; i++){
+                    if(markersArr[i].getTitle() != excludeIndex){
+                        markersArr[i].setMap(null);
+                    }
+                }
+            }
+
+        </script>
+    </body>
+</html>

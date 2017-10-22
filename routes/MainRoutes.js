@@ -4,11 +4,22 @@ var DataManager = require('../controllers/DataManager');
 var exports = module.exports = {};
 var io = require('socket.io');
 var request = require('request');
+var currentLocation = null;
 
 // Get Homepage
+/*
 router.get('/', ensureAuthenticated, function(req, res) {
   res.render('index', { username: req.user.username });
   console.log(req.user.username);
+});
+*/
+router.get('/',  function(req, res) {
+  if(req.session.currentLocation && req.session.showLocation){
+    res.render('index', {currentLocation: req.session.currentLocation});
+    req.session.showLocation = false;
+  }
+  else res.render('index', {currentLocation: null});
+
 });
 
 function ensureAuthenticated(req, res, next) { //Middleware
@@ -54,8 +65,12 @@ exports.socketFunction = function(server) {
       });
     });
 
-    socket.on('reqCarparkInfo', function(location) { //event 2
-      getCarParkInfo(location);
+    socket.on('reqCarparkInfo', function(data) { //event 2
+      currentLocation = data.currentLocation;
+      console.log("User: ");
+      console.log(data.userId);
+      //Uptate data structure to track user current location
+      getCarParkInfo(currentLocation);
 
     });
 
@@ -63,6 +78,8 @@ exports.socketFunction = function(server) {
       getCrowdLvl(location);
 
     });
+
+
 
   });
 }

@@ -25,9 +25,16 @@ mainRoutes.socketFunction(http);//Inititate socket use in Index Page
 
 
 // View Engine
+var helpers = {
+        // put all of your helpers inside this object
+        json: function(context){
+            return JSON.stringify(context);
+        }
+    };
 app.set('views', path.join(__dirname, 'views'));
 app.engine('handlebars', exphbs({
-  defaultLayout: 'layout'
+  defaultLayout: 'layout',
+  helpers: helpers
 }));
 app.set('view engine', 'handlebars');
 

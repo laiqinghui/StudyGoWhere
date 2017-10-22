@@ -21,9 +21,12 @@ def getPopularTime(lat, long, day, hour):
      print(day); print(hour);                                                        #southwest                 northeast
      response = populartimes.get("AIzaSyByIfr3RCGNGx5hQpQJ309A3dpQxJkrAks", types, (lowerLat, lowerLong), (upperLat, upperLong))
      
-     
-     print(response[0]['searchterm'])
-     crowdPercentage = response[0]['populartimes'][day]['data'][hour];
+     print(lat)
+     print(long)
+     if (len(response) > 0):
+        print(response[0]['searchterm'])
+        crowdPercentage = response[0]['populartimes'][day]['data'][hour];
+     else: crowdPercentage = 50;
      #rint(crowdPercentage)
 
      if(crowdPercentage < 25) :

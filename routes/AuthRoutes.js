@@ -7,6 +7,7 @@ var User = require('../models/user');
 var DataManager = require('../controllers/DataManager');
 
 
+
 // Register
 router.get('/register', function(req, res){
 	res.render('register');
@@ -91,11 +92,20 @@ passport.deserializeUser(function(id, done) {
   });
 });
 
-router.post('/login',
-  passport.authenticate('local', {successRedirect:'/', failureRedirect:'/users/login',failureFlash: true}),
-  function(req, res) {
-    res.redirect('/' + req.user.username);
-  });
+router.post('/login', function(req, res, next){
+
+		var location = req.body.currentLocation;
+		console.log("Location: ");
+		console.log(location);
+		if(location){
+			req.session.currentLocation = location;
+			req.session.showLocation = true;
+			passport.authenticate('local', {successRedirect:'/', failureRedirect:'/users/login',failureFlash: true})(req,res,next);
+		} else passport.authenticate('local', {successRedirect:'/', failureRedirect:'/users/login',failureFlash: true})(req,res,next);
+
+	});
+
+
 
 router.get('/logout', function(req, res){
 	req.logout();

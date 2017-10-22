@@ -23,7 +23,7 @@
 <div class="container">
   <div class="row">
 
-    <div id="map_panel" class="col-md-8 col-sm-8" style = "height: 400px;">
+    <div id="map_panel" class="col-md-8 col-sm-8" style = "height: 400px; width:100%;">
     </div>
 
     <div id="info_panel" style = "height: 400px;" class="col-md-4 col-sm-4">
@@ -62,11 +62,17 @@
                   </div>
                 </div>
 
+                {{#if user}}
                 <button type="button" class="btn btn-secondary" style = "margin-left: 7px;" data-toggle="modal" data-target="#comfirmFlagModal">
                   <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"> </span> <span id="flagCount">4</span>
                 </button>
+                {{else}}
+                <button type="button" class="btn btn-secondary" style = "margin-left: 7px;" data-toggle="modal" data-target="#loginModal">
+                  <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"> </span> <span id="flagCount">4</span>
+                </button>
+                {{/if}}
 
-                <!-- Modal -->
+                <!-- comfirmFlagModal Modal -->
                 <div class="modal fade" id="comfirmFlagModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -88,6 +94,25 @@
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <!-- Need to login Modal -->
+                <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+          				<div class="loginmodal-container">
+          					<center><h2>Please login to continue</h2></center><br>
+          				  <form action="" method="post" onSubmit="handleFeedbackLoginForm(this);">
+          					<input type="text" name="username" placeholder="Username">
+          					<input type="password" name="password" placeholder="Password">
+                    <input type="hidden" name="currentLocation" value="">
+          					<input type="submit" name="login" class="login loginmodal-submit" value="Login">
+          				  </form>
+
+          				  <div class="login-help">
+          					<a href="#">Register</a>
+          				  </div>
+          				</div>
+          			</div>
                 </div>
 
             <!--</div>-->
@@ -142,7 +167,20 @@ $("[data-toggle=popover]").popover({
   var dataList = document.getElementById('json-datalist');
   var input = document.getElementById('queryTextBox');
   var listGrp = document.getElementById('suggestionList');
-  var currentLocation;
+  {{#if currentLocation}} var currentLocation = {{{currentLocation}}};
+  {{else}} var currentLocation = null;{{/if}}
+  var user = {{{json user}}};
+
+   checkLocationIsSet = function(){
+    if(currentLocation){
+      initMap(currentLocation);
+      createInfoPanel(currentLocation);
+      $('#comfirmFlagModal').modal('show');
+    }
+    else initMap(null);
+  }
+
+
   //setup before functions
   var typingTimer; //timer identifier
   var doneTypingInterval = 600; //time in ms
@@ -164,22 +202,6 @@ $("[data-toggle=popover]").popover({
 
     createSuggestionList(results);
 
-    /*Alternative codes if not using handlebars:
-
-    for (count = 0; count < results.length; count++) {
-
-      var list = document.createElement('a'); // Create a new <option> element.
-      list.setAttribute('href', "#");
-      list.setAttribute('class', "list-group-item list-group-item-action");
-      var txt = document.createTextNode(results[count].name + " | " + results[count].description);
-      list.appendChild(txt);
-
-      //var createAText = document.createTextNode(results[count].name + " | " + results[count].description);
-      //list.appendChild(createAText);
-      listGrp.appendChild(list);
-    }
-    */
-
   });
 
   createSuggestionList = function(suggestions){
@@ -196,10 +218,13 @@ $("[data-toggle=popover]").popover({
 
   createInfoPanel = function(location){
 
+    
     currentLocation = location;//Update global var
     if(currentLocation.flagList)
       count = currentLocation.flagList.length
     else count = 0;
+
+    plotMarker(location);
     checkCrowdLvl();
     getCarParkInfo();
     clearChildren("suggestionListContainer");
@@ -233,12 +258,18 @@ $("[data-toggle=popover]").popover({
     form.hotspotid.value = currentLocation._id;
     form.action = "/feedback";
   }
+  handleFeedbackLoginForm = function(form){
+    form.currentLocation.value = JSON.stringify(currentLocation);
+    form.action = "/users/login";
+  }
 
   handleGetDirectionForm = function(){
     $('#directionsNavLink').removeClass('nav-link disabled');
     $('#directionsNavLink').addClass('nav-link');
     $('#getDirectionButton').popover('hide')
     $('#myTab a:last').tab('show') // Select last tab
+    marker.setMap(null);
+
     var startLoc = $('.popover-content').find('#startPointInput').val();//Text box is now generated as a new instance in popover content
     var transitOption = $('.popover-content').find('#transitOptions').val();
     var endLoc = currentLocation.address;
@@ -270,13 +301,16 @@ $("[data-toggle=popover]").popover({
   }
 
   getCarParkInfo = function(){
-
-    socket.emit('reqCarparkInfo', currentLocation);
+    if(user)
+      socket.emit('reqCarparkInfo', {currentLocation: currentLocation, userId:  user._id});
+    else
+      socket.emit('reqCarparkInfo', {currentLocation: currentLocation, userId:  null});
 
   }
 
   socket.on('nearbyCarparks', function(results) { //event 2
     console.log(results);
+    plotCarparksMarkers(results);
   });
 
   checkCrowdLvl = function(){
@@ -309,16 +343,78 @@ $("[data-toggle=popover]").popover({
 </script>
 
 <script>
+  var map;
+  var marker;
+  var geocoder = new google.maps.Geocoder();
   var directionsService = new google.maps.DirectionsService();
   var directionsDisplay = new google.maps.DirectionsRenderer();
 
+  var iconBase = 'https://maps.google.com/mapfiles/kml/shapes/';
+  var icons = {
+    parking: {
+      icon: iconBase + 'parking_lot_maps.png'
+    },
+  };
+
+/*
   var map = new google.maps.Map(document.getElementById('map_panel'), {
     zoom: 7,
     mapTypeId: google.maps.MapTypeId.ROADMAP
   });
+*/
+  function initMap(location) {
 
-  directionsDisplay.setMap(map);
-  directionsDisplay.setPanel(document.getElementById('directions_panel'));
+                map = new google.maps.Map(document.getElementById('map_panel'), {
+                    zoom: 11,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP,
+                    clickableIcons: false
+                });
+
+                directionsDisplay.setMap(map);
+                directionsDisplay.setPanel(document.getElementById('directions_panel'));
+
+                if(location){
+                  address = location.address;
+                  map.setZoom(17);
+                }
+                else address = "singapore";
+                geocoder.geocode( {'address' : address}, function(results, status) {
+                  if (status == google.maps.GeocoderStatus.OK) {
+                    map.setCenter(results[0].geometry.location);
+                  }
+                  });
+                //selectedLoc(results);
+            }
+
+  function plotMarker(location){
+
+    marker = new google.maps.Marker({
+                            position: new google.maps.LatLng(location.lat,location.lon),
+                            map: map,
+                            title: location.name,
+                        });
+    map.setZoom(17);
+    map.panTo(marker.position);
 
 
+  }
+
+  function plotCarparksMarkers(carparksObj){
+
+    if(carparksObj.carparks.length == 0)
+      return;
+    for(i = 0; i < carparksObj.carparks.length; i++){
+      currentCarpark = carparksObj.carparks[i];
+      carparkMarker = new google.maps.Marker({
+                              position: new google.maps.LatLng(currentCarpark.Latitude,currentCarpark.Longitude),
+                              map: map,
+                              title: currentCarpark.Development + " | Vancancy: " + currentCarpark.Lots,
+                              icon: icons['parking'].icon,
+                          });
+    }
+    map.setZoom(15);
+
+  }
+
+  checkLocationIsSet();
 </script>
