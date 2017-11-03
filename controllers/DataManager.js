@@ -74,7 +74,10 @@ var hotspotSchema = mongoose.Schema({
 	lat: {
 		type: String
 	},
-	flagList: {
+	likes: {
+		type: Array
+	},
+	dislikes: {
 		type: Array
 	}
 });

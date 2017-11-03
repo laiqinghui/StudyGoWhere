@@ -4649,7 +4649,7 @@ tbody.collapse.show {
 }
 
 .nav-tabs {
-  border-bottom: 1px solid #ddd;
+  /*border-bottom: 1px solid #ddd;*/
 }
 
 .nav-tabs .nav-item {
@@ -5007,6 +5007,8 @@ tbody.collapse.show {
     padding-right: 0;
     padding-left: 0;
   }
+
+  
 }
 
 @media (min-width: 1200px) {

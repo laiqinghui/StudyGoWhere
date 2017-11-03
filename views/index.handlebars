@@ -1,8 +1,8 @@
-<div class="container">
+<div class="container-fluid">
 
   <div class="row">
     <div class="input-group">
-      <input id="queryTextBox" style = "width: 90%;" type="text" autocomplete="off" class="form-control" placeholder="E.g. orchard" aria-label="Search for...">
+      <input id="queryTextBox" style = "width: 90%;" type="text" autocomplete="off" class="form-control" placeholder="e.g. orchard" aria-label="Search for...">
       <span class="input-group-btn" style = "width: 10%;">
         <button class="btn btn-secondary" type="button">Go!</button>
       </span>
@@ -20,16 +20,16 @@
 
 </div>
 <br>
-<div class="container">
-  <div class="row">
+<div class="container-fluid" style = "height: 100%;">
+  <div class="row" style = "height: 100%;">
 
-    <div id="map_panel" class="col-md-8 col-sm-8" style = "height: 400px; width:100%;">
+    <div id="map_panel" class="col-md-8 col-sm-8" style = "height: 90%; width:100%;">
     </div>
 
-    <div id="info_panel" style = "height: 400px;" class="col-md-4 col-sm-4">
+    <div id="info_panel" style = "height: 90%;" class="col-md-4 col-sm-4">
 
       <!-- Nav tabs -->
-      <ul class="nav nav-tabs nav-fill" style = "height: 10%;" id="myTab" role="tablist">
+      <ul class="nav nav-tabs nav-fill"  id="myTab" role="tablist">
         <li class="nav-item">
           <a class="nav-link active" data-toggle="tab" href="#detail_info_panel" role="tab" aria-controls="home">Details  </a>
         </li>
@@ -44,10 +44,96 @@
             <!-- To be populated by Handlesbars-->
             </br><h4>No location selected.</h4>
           </div>
-          <div class="container" id = "buttonContainer" style = "display: none; width:100%; position: absolute; bottom: 0; padding-left: 0">
+          <div  id = "buttonContainer" style = "display: none; width:100%; position: absolute; bottom: 0;">
             <!--<div class="row">-->
 
-                <button id="getDirectionButton" type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-title="Where are you heading from?" data-placement="bottom" data-html="true">Go there!</button>
+
+
+                {{#if user}}
+                <button type="button" class="btn btn-secondary" style = "margin-left: 7px;" data-toggle="modal" data-target="#likesModal">
+                  <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"> </span> <span id="likeCount">4</span>
+                </button>
+                <button type="button" class="btn btn-secondary" style = "margin-left: 7px;" data-toggle="modal" data-target="#dislikesModal">
+                  <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"> </span> <span id="dislikeCount">4</span>
+                </button>
+                {{else}}
+                <button type="button" class="btn btn-secondary" style = "margin-left: 7px;" data-toggle="modal" data-target="#loginModal">
+                  <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"> </span> <span id="likeCount">4</span>
+                </button>
+                <button type="button" class="btn btn-secondary" style = "margin-left: 7px;" data-toggle="modal" data-target="#loginModal">
+                  <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"> </span> <span id="dislikeCount">4</span>
+                </button>
+                {{/if}}
+
+                <!-- likesModal Modal -->
+                <div class="modal fade" id="likesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Feedback</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        Are you sure you want to flag this hotspot as good?
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <form action="" method="post" onSubmit="handleFeedbackForm(this);">
+                          <input type="hidden" name="hotspotid" value=""/>
+                          <input type="hidden" name="flagType" value="like"/>
+                          <button type="submit" class="btn btn-primary">Comfirm</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- dislikesModal Modal -->
+                <div class="modal fade" id="dislikesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Feedback</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        Are you sure you want to flag this hotspot as bad?
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <form action="" method="post" onSubmit="handleFeedbackForm(this);">
+                          <input type="hidden" name="hotspotid" value=""/>
+                          <input type="hidden" name="flagType" value="dislike"/>
+                          <button type="submit" class="btn btn-primary">Comfirm</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Need to login Modal -->
+                <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+            				<div class="loginmodal-container">
+            					<center><h2>Please login to continue</h2></center><br>
+              				  <form action="" method="post" onSubmit="handleFeedbackLoginForm(this);">
+                					<input type="text" name="username" placeholder="Username">
+                					<input type="password" name="password" placeholder="Password">
+                          <input type="hidden" name="currentLocation" value="">
+                					<input type="submit" name="login" class="login loginmodal-submit" value="Login">
+              				  </form>
+            				    <div class="login-help">
+            					    <a href="#">Register</a>
+            				    </div>
+            				</div>
+          			   </div>
+                </div>
+
+                <button id="getDirectionButton" type="button" class="btn btn-success" style = "position: absolute; right:0px; " data-container="body" data-toggle="popover" data-title="Where are you heading from?" data-placement="top" data-html="true">Go!</button>
                 <div id="popover-content" style = "display: none;">
                   <div class="input-group">
                     <input id ="startPointInput" style = "width: 40%;" type="text" class="form-control" placeholder="e.g. NTU" aria-label="Search for...">
@@ -61,61 +147,6 @@
                     </span>
                   </div>
                 </div>
-
-                {{#if user}}
-                <button type="button" class="btn btn-secondary" style = "margin-left: 7px;" data-toggle="modal" data-target="#comfirmFlagModal">
-                  <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"> </span> <span id="flagCount">4</span>
-                </button>
-                {{else}}
-                <button type="button" class="btn btn-secondary" style = "margin-left: 7px;" data-toggle="modal" data-target="#loginModal">
-                  <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"> </span> <span id="flagCount">4</span>
-                </button>
-                {{/if}}
-
-                <!-- comfirmFlagModal Modal -->
-                <div class="modal fade" id="comfirmFlagModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Feedback</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true">&times;</span>
-                        </button>
-                      </div>
-                      <div class="modal-body">
-                        Are you sure you want to flag this hotspot?
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <form action="" method="post" onSubmit="handleFeedbackForm(this);">
-                          <input type="hidden" name="hotspotid" value=""/>
-                          <button type="submit" class="btn btn-primary">Comfirm</button>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Need to login Modal -->
-                <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                  <div class="modal-dialog">
-          				<div class="loginmodal-container">
-          					<center><h2>Please login to continue</h2></center><br>
-          				  <form action="" method="post" onSubmit="handleFeedbackLoginForm(this);">
-          					<input type="text" name="username" placeholder="Username">
-          					<input type="password" name="password" placeholder="Password">
-                    <input type="hidden" name="currentLocation" value="">
-          					<input type="submit" name="login" class="login loginmodal-submit" value="Login">
-          				  </form>
-
-          				  <div class="login-help">
-          					<a href="#">Register</a>
-          				  </div>
-          				</div>
-          			</div>
-                </div>
-
-            <!--</div>-->
           </div>
 
         </div><!-- end of detail_info_panel--->
@@ -126,19 +157,19 @@
     </div><!-- end of info_panel --->
   </div>
 
-</div>
+
 </div>
 
 <script id="detailInfoPanelTemplate"  type ="text/x-handlebars-template">
-  <div>
-
+  <div style = "padding-top: 20%; font-size:1.0vw">
+    <br/>
     Name: \{{name}} </br>
     </br>
     Description: \{{description}}</br>
     </br>
     Address: \{{address}}</br>
     </br>
-    Crowd level: <div id ="crowdLoader" style="float:right; margin-right: 60px;"><div class="loader"></div></div> <span id ="crowdLevelBadge" style = "display: none;"></span></br>
+    Crowd level:<div id ="crowdLoader" style = "padding-left: 10px; padding-top: 10px; width: 30px; display: inline-block;"><div  class="loader"></div></div><span id ="crowdLevelBadge" style = "display: none; margin-left: 10px;"></span></br>
     </br>
   </div>
 
@@ -175,7 +206,7 @@ $("[data-toggle=popover]").popover({
     if(currentLocation){
       initMap(currentLocation);
       createInfoPanel(currentLocation);
-      $('#comfirmFlagModal').modal('show');
+      //$('#dislikesModal').modal('show');
     }
     else initMap(null);
   }
@@ -218,17 +249,21 @@ $("[data-toggle=popover]").popover({
 
   createInfoPanel = function(location){
 
-    
-    currentLocation = location;//Update global var
-    if(currentLocation.flagList)
-      count = currentLocation.flagList.length
-    else count = 0;
 
+    currentLocation = location;//Update global var
+    if(currentLocation.dislikes)
+      dislikes = currentLocation.dislikes.length;
+    else dislikes = 0;
+    if(currentLocation.likes)
+      likes = currentLocation.likes.length;
+    else likes = 0;
+    console.log(likes);
     plotMarker(location);
     checkCrowdLvl();
     getCarParkInfo();
     clearChildren("suggestionListContainer");
-    $('#flagCount').text(count);
+    $('#dislikeCount').text(dislikes);
+    $('#likeCount').text(likes);
     $( "#buttonContainer" ).show( "slow" );
     var rawTemplate = document.getElementById('detailInfoPanelTemplate').innerHTML;
     var compiledTemplate = Handlebars.compile(rawTemplate);
