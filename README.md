@@ -18,7 +18,8 @@
 		"mongod --directoryperb --dbpath C:\mongodb\data\db --logpath C:\mongodb\log\mongo.log --logappend --rest --install"
 		"net start MongoDB"
 	5) Copy the "hotspotData.json" file from root of current Git repository to C:\mongodb\bin and run following command to populate database:
-		"mongoimport --jsonArray --db studygowhere --collection hotspot < hotspotData.json"
+		"mongoimport --jsonArray --db studygowhere --collection hotspots < hotspotFile.json"
+	6) Enable Text search by running command in Mongo shell: db.hotspots.createIndex({ name: 'text', description: 'text', address: 'text'})	
 		
 4) Download/clone git repository and navigate to root of downloaded Git repository
 5) Run "npm install" command to install dependencies 		

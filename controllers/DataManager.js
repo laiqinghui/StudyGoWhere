@@ -89,7 +89,7 @@ module.exports.getHotspotByName = function(regexQuery, callback){
 
 	//regexQuery = "\"jurong\" \"rc\""
 	//console.log("Query: " + regexQuery);
-	var query = {$text: {$search: regexQuery}};
+	var query = { $text: {$search: regexQuery}, $where:'this.dislikes == null || this.dislikes.length <3' };
 	mongooseHotspotModel.find(query, callback).limit(10);
 }
 

@@ -127,7 +127,7 @@
                 					<input type="submit" name="login" class="login loginmodal-submit" value="Login">
               				  </form>
             				    <div class="login-help">
-            					    <a href="#">Register</a>
+            					    <a href="/users/register">Register</a>
             				    </div>
             				</div>
           			   </div>
@@ -258,6 +258,7 @@ $("[data-toggle=popover]").popover({
       likes = currentLocation.likes.length;
     else likes = 0;
     console.log(likes);
+    clearMarkers();
     plotMarker(location);
     checkCrowdLvl();
     getCarParkInfo();
@@ -330,6 +331,11 @@ $("[data-toggle=popover]").popover({
     directionsService.route(request, function(response, status) {
       if (status == google.maps.DirectionsStatus.OK) {
         directionsDisplay.setDirections(response);
+        geocoder.geocode( {'address' : startLoc}, function(results, status) {
+          if (status == google.maps.GeocoderStatus.OK) {
+            map.setCenter(results[0].geometry.location);
+          }
+          });
       }
     });
 
@@ -379,7 +385,8 @@ $("[data-toggle=popover]").popover({
 
 <script>
   var map;
-  var marker;
+  var markersArray = [];
+  var carparkMarker;
   var geocoder = new google.maps.Geocoder();
   var directionsService = new google.maps.DirectionsService();
   var directionsDisplay = new google.maps.DirectionsRenderer();
@@ -430,6 +437,7 @@ $("[data-toggle=popover]").popover({
                         });
     map.setZoom(17);
     map.panTo(marker.position);
+    markersArray.push(marker);
 
 
   }
@@ -446,8 +454,22 @@ $("[data-toggle=popover]").popover({
                               title: currentCarpark.Development + " | Vancancy: " + currentCarpark.Lots,
                               icon: icons['parking'].icon,
                           });
+      markersArray.push(carparkMarker);
     }
     map.setZoom(15);
+
+
+  }
+
+  function clearMarkers(){
+
+    if(markersArray.length){
+      for (var i = 0; i < markersArray.length; i++ ) {
+        markersArray[i].setMap(null);
+      }
+      markersArray = [];
+
+    }
 
   }
 

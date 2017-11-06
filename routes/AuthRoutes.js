@@ -41,25 +41,23 @@ router.post('/register', function(req, res){
 			errors:errors
 		});
 	} else {
-		/*
-		var newUser = new User({
-			name: name,
-			email:email,
-			username: username,
-			password: password
-		});
-		*/
 
-		var newUser = new User(name, username, password, email);
-
-		DataManager.saveUser(newUser, function(err, user){
+		DataManager.getUserByUsername(username, function(err, user){
 			if(err) throw err;
-			console.log(user);
+			if(user){
+				req.flash('error_msg', 'Username already exist! Please try again!');
+				res.redirect('/users/register');
+				}
+			 else {
+				var newUser = new User(name, username, password, email);
+				DataManager.saveUser(newUser, function(err, user){
+				if(err) throw err;
+				req.flash('success_msg', 'You are registered and can now login');
+				res.redirect('/users/login');
+				console.log(user);
+				});
+			}
 		});
-
-		req.flash('success_msg', 'You are registered and can now login');
-
-		res.redirect('/users/login');
 	}
 });
 

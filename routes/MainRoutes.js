@@ -34,7 +34,7 @@ function ensureAuthenticated(req, res, next) { //Middleware
 exports.router = router;
 
 exports.socketFunction = function(server) {
-  console.log("Socket Listuener active");
+  console.log("Socket Listener active");
   io = io(server);
   io.on('connection', (socket) => {
 
@@ -77,6 +77,18 @@ exports.socketFunction = function(server) {
     socket.on('checkCrowdLvl', function(location) { //event 3
       getCrowdLvl(location);
 
+    });
+
+    socket.on('usernameValidate', function(username) { //event 4
+      DataManager.getUserByUsername(username, function(err, user){
+  			if(err) throw err;
+  			if(user){
+  				    io.emit('userExist', true);
+  				}
+  			 else {
+              io.emit('userExist', false);
+  				};
+  		});
     });
 
 
@@ -133,16 +145,38 @@ function deg2rad(deg) {
 function getCrowdLvl(location){
   var localPythonServerUrl = 'http://localhost:5000/populartimes?lat=' + location.lat + '&lon=' + location.lon;
   var options = { url: localPythonServerUrl};
-
+  var crowdLvl;//default
   request(options, function(err, res, json) {
   if (err) {
-    throw err;
+    console.log("POPSTIME DOWN(request)!");
+    
   }
 
-  console.log(JSON.parse(json));
-  io.emit('crowdLvl', JSON.parse(json));
+  if(safelyParseJSON (json)!=null){
+    crowdLvl = safelyParseJSON (json);
+    if(crowdLvl.crowd)
+      io.emit('crowdLvl', crowdLvl);
+    else io.emit('crowdLvl', { crowd: 'Medium' });
+  } else io.emit('crowdLvl', { crowd: 'Medium' });
+
+
   });
 
+}
+
+function safelyParseJSON (json) {
+
+  var parsed = null;
+
+  try {
+    parsed = JSON.parse(json)
+  } catch (e) {
+
+    console.log("POPSTIME DOWN!");
+  }
+  console.log("Parsed: ");
+  console.log(parsed);
+  return parsed // Could be undefined!
 }
 
 //Hotspot feedback
@@ -159,12 +193,7 @@ router.post('/feedback',ensureAuthenticated, function(req, res){
 
      if(flagType == "dislike"){
 
-       if(doc.dislikes === null){//empty flaglist
-         doc.dislikes = [req.user.username];//Need to declare flaglist as array as it is initial declared as null in db
-         doc.save();
-         req.flash('success_msg', 'Feedback submitted! Please proceed to select other location!');
-         res.redirect('/');
-       }else{//not empty
+
          if((doc.dislikes.indexOf(req.user.username) == -1) && (doc.likes.indexOf(req.user.username) == -1)){//check if current user already flag the hotspot before
            doc.dislikes.push(req.user.username);
            doc.save();
@@ -174,15 +203,11 @@ router.post('/feedback',ensureAuthenticated, function(req, res){
            req.flash('error_msg', 'You have already flag this location before! You are only allowed to flag a location once.');
            res.redirect('/');
          }
-       }
+
+
      } else if(flagType == "like"){
 
-       if(doc.likes === null){//empty flaglist
-         doc.likes = [req.user.username];//Need to declare flaglist as array as it is initial declared as null in db
-         doc.save();
-         req.flash('success_msg', 'Feedback submitted! Please proceed to select other location!');
-         res.redirect('/');
-       }else{//not empty
+
          if((doc.dislikes.indexOf(req.user.username) == -1) && (doc.likes.indexOf(req.user.username) == -1)){//check if current user already flag the hotspot before
            doc.likes.push(req.user.username);
            doc.save();
@@ -192,12 +217,8 @@ router.post('/feedback',ensureAuthenticated, function(req, res){
            req.flash('error_msg', 'You have already flag this location before! You are only allowed to flag a location once.');
            res.redirect('/');
          }
-       }
-
-
 
      }
-
 
    })
 

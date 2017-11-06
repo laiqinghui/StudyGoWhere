@@ -3,30 +3,151 @@
   <h2 class="page-header">Register</h2>
   {{#if errors}}
         {{#each errors}}
-          <div class="alert alert-danger">{{msg}}</div>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            {{msg}}
+          </div>
         {{/each}}
   {{/if}}
-<form method="post" action="/users/register">
+<form id = "regform">
    <div class="form-group">
     <label>Name</label>
     <input type="text" class="form-control" placeholder="Name" name="name">
   </div>
-  <div class="form-group">
+  <div id="usernameformgroup" class="form-group">
     <label>Username</label>
-    <input type="text" class="form-control" placeholder="Username" name="username">
+    <input type="text" id="usernameinput" class="form-control" placeholder="Username" name="username">
+    <div id="usernamefeedback" class="form-control-feedback"></div>
   </div>
    <div class="form-group">
     <label>Email</label>
     <input type="email" class="form-control" placeholder="Email" name="email">
   </div>
-  <div class="form-group">
+  <div id="passwordformgroup" class="form-group">
     <label>Password</label>
-    <input type="password" class="form-control" placeholder="Password" name="password">
+    <input id="passwordinput" type="password" class="form-control form-control-danger" placeholder="Password" name="password">
+    <div id="passwordfeedback" class="form-control-feedback"></div>
   </div>
-  <div class="form-group">
+  <div id="password2formgroup" class="form-group">
     <label>Confirm Password</label>
-    <input type="password" class="form-control" placeholder="Password" name="password2">
+    <input id="password2input" type="password" class="form-control" placeholder="Password" name="password2">
+    <div id="password2feedback" class="form-control-feedback"></div>
   </div>
-  <button type="submit" class="btn btn-default">Submit</button>
+  <button id = "submit" class="btn btn-default" disabled>Submit</button>
 </form>
 </div>
+
+<script>
+  var socket = io();
+  var typingTimer; //timer identifier
+  var doneTypingInterval = 600; //time in ms
+  var usernameValid = false;
+  var passwordValid = false;
+  var password2Valid = false;
+
+  $('#usernameinput').keyup(function() {
+    clearTimeout(typingTimer);
+    if ($('#usernameinput').val()) {
+      typingTimer = setTimeout(validateUsername, doneTypingInterval);
+    }
+  });
+
+  $('#passwordinput').keyup(function() {
+    clearTimeout(typingTimer);
+    if ($('#passwordinput').val()) {
+      typingTimer = setTimeout(validatePassword, doneTypingInterval);
+    }
+  });
+
+  $('#password2input').keyup(function() {
+    clearTimeout(typingTimer);
+    if ($('#password2input').val()) {
+      typingTimer = setTimeout(comfirmPassword, doneTypingInterval);
+    }
+  });
+
+  validateUsername = function(){
+    console.log($('#usernameinput').val());
+    if(($('#usernameinput').val().length < 3) || ($('#usernameinput').val().length > 10) ){
+      $('#usernameformgroup').attr("class","form-group has-danger");
+      $('#usernameinput').attr("class","form-control form-control-danger");
+      $('#usernamefeedback').html("Username must be at least 3 characters long and must not exceed 10 characters!");
+      usernameValid = false;
+      $('#submit').prop('disabled', true);
+    } else {
+      socket.emit('usernameValidate', $('#usernameinput').val());
+    }
+  }
+
+  socket.on('userExist', function(userExist) { //event 2
+
+    if(userExist){
+      $('#usernameformgroup').attr("class","form-group has-danger");
+      $('#usernameinput').attr("class","form-control form-control-danger");
+      $('#usernamefeedback').html("Username already exist! Please try another one!");
+      usernameValid = false;
+      $('#submit').prop('disabled', true);
+    } else{
+      $('#usernameformgroup').attr("class","form-group has-success");
+      $('#usernameinput').attr("class","form-control form-control-success");
+      $('#usernamefeedback').html("");
+      usernameValid = true;
+      if(usernameValid && passwordValid && password2Valid)
+        $('#submit').prop('disabled', false);
+    }
+
+  });
+
+  validatePassword = function(){
+
+    if(($('#passwordinput').val().length < 6) || ($('#passwordinput').val().length > 12) ){
+      $('#passwordformgroup').attr("class","form-group has-danger");
+      $('#passwordinput').attr("class","form-control form-control-danger");
+      $('#passwordfeedback').html("Password must be at least 6 characters long and must not exceed 12 characters!");
+      passwordValid = false;
+      $('#submit').prop('disabled', true);
+    } else {
+      $('#passwordformgroup').attr("class","form-group has-success");
+      $('#passwordinput').attr("class","form-control form-control-success");
+      $('#passwordfeedback').html("");
+      passwordValid = true;
+      comfirmPassword();
+      if(usernameValid && passwordValid && password2Valid)
+        $('#submit').prop('disabled', false);
+    }
+  }
+
+  comfirmPassword = function(){
+
+    if($('#passwordinput').val() != $('#password2input').val()){
+      $('#password2formgroup').attr("class","form-group has-danger");
+      $('#password2input').attr("class","form-control form-control-danger");
+      $('#password2feedback').html("Password not equal");
+      password2Valid = false;
+      $('#submit').prop('disabled', true);
+    } else {
+      $('#password2formgroup').attr("class","form-group has-success");
+      $('#password2input').attr("class","form-control form-control-success");
+      $('#password2feedback').html("");
+      password2Valid = true;
+      if(usernameValid && passwordValid && password2Valid)
+        $('#submit').prop('disabled', false);
+    }
+  }
+
+  $("#submit").click(function() {
+    var empty = $(this).parent().find("input").filter(function() {
+        return this.value === "";
+    });
+    if(empty.length) {
+        alert("Please fill up the form before submitting!");
+
+    }else {
+        document.getElementById("regform").method = "post";
+    }
+});
+
+
+</script>
